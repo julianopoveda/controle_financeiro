@@ -1,0 +1,2 @@
+#!/bin/sh
+echo mudou para $1 $0
