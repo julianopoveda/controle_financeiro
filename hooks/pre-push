@@ -1,0 +1,20 @@
+#!/bin/sh
+
+build() {
+    dotnet build -v q controle_financeiro.sln
+    if [ $? -ne 0 ]; then
+        exit -1
+    fi
+}
+
+run_tests() {
+    dotnet test --logger html -r ./tests_report/ -v m
+    if [$? -ne 0]; then
+        echo "Algum teste nao passou. Verifique o relatorio na pasta tests_report e realize as devidas correcoes"
+        exit -2
+    fi
+}
+
+build
+run_tests
+#TODO: criar a parte de tageamento quando for master
