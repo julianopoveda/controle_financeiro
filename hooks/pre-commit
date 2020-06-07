@@ -1,8 +1,22 @@
-dotnet build -v q ../controle_financeiro.sln
+#!/bin/sh
+echo $1
+checkInvalidFiles() {
+    invalidFilesList=$(git diff-index --cached head --name-only | grep -E "bin/|obj/|.key|.credentials")
+    if [ -z "$invalidFilesList" ]; then
+        return 0
+    else
+        echo "foram encontrados arquivos(*.key, *.credentials) ou pastas(bin/, obj/) que não podem ser commitados"
+        echo -e $invalidFilesList
+        return 1
+    fi
+}
 
-if [ $? -eq 0 ]
-then 
-    exit 0
-else
+#isInvalid=$(checkInvalidFiles)#usar echo para retornar algum valor
+checkInvalidFiles
+isInvalid=$?
+if [ $isInvalid -eq 1 ]; then
     exit 1
 fi
+
+dotnet build -v q controle_financeiro.sln
+exit $?
