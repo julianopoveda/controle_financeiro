@@ -1,13 +1,33 @@
 #!/bin/sh
 echo $1
 checkInvalidFiles() {
-    invalidFilesList=$(git diff-index --cached head --name-only | grep -E "bin/|obj/|.key|.credentials")
+    invalidFilesList=$(git diff-index --cached HEAD --name-only | grep -E "bin/|obj/|.key|.credentials")
     if [ -z "$invalidFilesList" ]; then
         return 0
     else
         echo "foram encontrados arquivos(*.key, *.credentials) ou pastas(bin/, obj/) que não podem ser commitados"
         echo -e $invalidFilesList
         return 1
+    fi
+}
+
+checkWarningFiles() {
+    filesList=$(git diff-index --cached HEAD --name-only | grep -E "appsettings|web.config")
+    echo $filesList
+    if [ -n "$filesList" ]; then
+        echo "Foram encontrados arquivos appsettings ou web.config"
+        echo "Selecione uma das opcoes:"
+        echo "(I)ncluir\n(A)bortar\n(U)nstage a prosseguir com o commit"
+        read opcao < /dev/tty
+        if [ "$opcao" = "I" ];then
+            return 0
+        elif [ "$opcao" = "U" ]; then
+            $(git restore --staged $filesList)
+            return 0
+        else
+            echo "Commit cancelado, revise os arquivos e tente novamente"
+            return 1
+        fi
     fi
 }
 
@@ -18,5 +38,11 @@ if [ $isInvalid -eq 1 ]; then
     exit 1
 fi
 
-dotnet build -v q controle_financeiro.sln
+checkWarningFiles
+opcaoReturn=$?
+if [ $opcaoReturn -eq 1 ]; then
+    exit 1
+fi
+
+#dotnet build -v q controle_financeiro.sln
 exit $?
